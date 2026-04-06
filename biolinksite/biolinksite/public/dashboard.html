@@ -183,7 +183,7 @@
     }
 
     .toggle-row {
-      display: flex; align-items: center; justify-content: space-between;
+      display: none; align-items: center; justify-content: space-between;
       margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border);
     }
     .toggle-label { font-size: 13px; font-weight: 500; color: var(--text); }
@@ -246,7 +246,7 @@
       <div class="section-label">Background video</div>
       <div class="card">
         <div class="upload-zone" id="uploadZone">
-          <input type="file" id="videoInput" accept="video/mp4,video/webm,video/ogg,video/quicktime" />
+          <input type="file" id="videoInput" accept="video/mp4,video/webm,video/ogg,video/quicktime,.mp4,.webm,.ogg,.mov" />
           <div class="upload-icon">🎬</div>
           <div class="upload-text">Click or drop a video</div>
           <div class="upload-sub">MP4, WebM, MOV — max 100MB</div>
@@ -259,6 +259,16 @@
           <span>🎬</span>
           <span class="video-name" id="videoFileName"></span>
           <button class="remove-btn" id="removeVideoBtn">×</button>
+        </div>
+        <!-- Sound button toggle: controls whether a sound on/off button appears on the live page -->
+        <div class="toggle-row" id="muteToggleRow">
+          <div>
+            <div class="toggle-label">Show sound button on live page</div>
+            <div class="toggle-sub">Lets visitors toggle audio on/off</div>
+          </div>
+          <button class="toggle-btn" id="muteToggle" aria-label="Toggle sound button">
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </button>
         </div>
       </div>
     </div>
@@ -378,19 +388,22 @@ function uploadVideo(file){
   xhr.onerror=function(){zone.style.opacity='1';zone.style.pointerEvents='auto';pw.style.display='none';toast('Upload failed',true);};
   xhr.send(fd);
 }
-function showVideo(path){ document.getElementById('muteToggleRow').style.display='flex';
+function showVideo(path){
+  document.getElementById('muteToggleRow').style.display='flex';
   document.getElementById('currentVideo').style.display='flex';
   document.getElementById('videoFileName').textContent=path.split('/').pop();
 }
 document.getElementById('removeVideoBtn').addEventListener('click',function(){
-  fetch('/admin/video',{method:'DELETE'}).then(function(){document.getElementById('currentVideo').style.display='none';toast('Video removed');});
+  fetch('/admin/video',{method:'DELETE'}).then(function(){
+    document.getElementById('currentVideo').style.display='none';
+    document.getElementById('muteToggleRow').style.display='none';
+    toast('Video removed');
+  });
 });
 
-// Save
-
-// Mute toggle
+// Mute toggle — controls whether the sound button shows on the live page
 var muteToggle = document.getElementById('muteToggle');
-var videoMuted = true;
+var videoMuted = false; // default: sound button shown on live page
 
 muteToggle.addEventListener('click', function() {
   videoMuted = !videoMuted;
@@ -401,6 +414,8 @@ function setMuteToggle(muted) {
   videoMuted = muted;
   muteToggle.classList.toggle('on', !muted);
 }
+
+// Save
 document.getElementById('saveBtn').addEventListener('click',function(){
   var btn=this; btn.disabled=true; btn.textContent='Saving...';
   fetch('/admin/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({display_name:document.getElementById('displayName').value,bio:document.getElementById('bio').value,font_family:selFont,links:links,video_muted:videoMuted})})
