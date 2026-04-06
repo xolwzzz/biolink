@@ -43,15 +43,13 @@
     }
     .link-btn:hover { background: rgba(255,255,255,0.13); border-color: rgba(255,255,255,0.2); transform: translateY(-1px); }
 
-    /* Sound toggle button */
     .sound-btn {
       position: fixed; top: 18px; right: 18px; z-index: 20;
       background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
-      color: rgba(255,255,255,0.7); font-family: 'Inter', sans-serif;
+      color: rgba(255,255,255,0.75); font-family: 'Inter', sans-serif;
       font-size: 12px; font-weight: 500; padding: 7px 13px;
       border-radius: 20px; cursor: pointer; backdrop-filter: blur(12px);
       transition: background 0.2s, color 0.2s;
-      display: none; /* hidden until video loads */
     }
     .sound-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
 
@@ -61,7 +59,6 @@
 </head>
 <body>
   <div id="bg"></div>
-  <button class="sound-btn" id="soundBtn">🔊 Sound: On</button>
   <main class="page">
     <div class="container">
       <div class="avatar" id="avatar">✦</div>
@@ -73,21 +70,6 @@
   <a class="watermark" href="/login">biolink</a>
 
   <script>
-    var soundBtn = document.getElementById('soundBtn');
-    var videoEl = null;
-    var isMuted = false;
-
-    function updateSoundBtn() {
-      soundBtn.textContent = isMuted ? '🔇 Sound: Off' : '🔊 Sound: On';
-    }
-
-    soundBtn.addEventListener('click', function() {
-      if (!videoEl) return;
-      isMuted = !isMuted;
-      videoEl.muted = isMuted;
-      updateSoundBtn();
-    });
-
     fetch('/api/profile').then(function(r) { return r.json(); }).then(function(data) {
       var bg = document.getElementById('bg');
 
@@ -98,27 +80,31 @@
         vid.loop = true;
         vid.playsInline = true;
         vid.preload = 'auto';
-        // Always start unmuted — browser may block, we handle that below
         vid.muted = false;
         vid.src = data.video_path;
         wrapper.appendChild(vid);
         bg.appendChild(wrapper);
-        videoEl = vid;
 
-        // Try playing with sound; if browser blocks it, fall back to muted silently
-        vid.play().then(function() {
-          // Autoplay with sound succeeded
-          isMuted = false;
-          soundBtn.style.display = 'block';
-          updateSoundBtn();
-        }).catch(function() {
-          // Browser blocked unmuted autoplay — play muted instead
+        vid.play().catch(function() {
           vid.muted = true;
-          isMuted = true;
           vid.play().catch(function(){});
-          soundBtn.style.display = 'block';
-          updateSoundBtn();
         });
+
+        // Only show the sound button if the dashboard toggle is ON
+        if (!data.video_muted) {
+          var btn = document.createElement('button');
+          btn.className = 'sound-btn';
+          btn.textContent = vid.muted ? '🔇 Sound: Off' : '🔊 Sound: On';
+          btn.addEventListener('click', function() {
+            vid.muted = !vid.muted;
+            if (!vid.muted) vid.play().catch(function(){});
+            btn.textContent = vid.muted ? '🔇 Sound: Off' : '🔊 Sound: On';
+          });
+          document.body.appendChild(btn);
+          vid.addEventListener('playing', function() {
+            btn.textContent = vid.muted ? '🔇 Sound: Off' : '🔊 Sound: On';
+          });
+        }
       } else {
         var div = document.createElement('div');
         div.className = 'static-bg';
