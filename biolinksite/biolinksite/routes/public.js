@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const { getDb } = require('../db');
 const router = express.Router();
 
@@ -26,11 +27,7 @@ router.get('/login', (req, res) => {
 });
 router.get('/signup', (req, res) => res.sendFile(path.join(__dirname, '..', 'public', 'signup.html')));
 
-module.exports = router;
-
 // Video streaming with range request support — fixes slow start
-const fs = require('fs');
-const path = require('path');
 router.get('/uploads/:filename', (req, res) => {
   const filePath = path.join(__dirname, '..', 'public', 'uploads', path.basename(req.params.filename));
   if (!fs.existsSync(filePath)) return res.status(404).end();
@@ -61,3 +58,5 @@ router.get('/uploads/:filename', (req, res) => {
     fs.createReadStream(filePath).pipe(res);
   }
 });
+
+module.exports = router;
