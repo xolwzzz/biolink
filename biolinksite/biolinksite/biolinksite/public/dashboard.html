@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Syne+Mono&family=Playfair+Display:wght@700;900&family=Cormorant+Garamond:wght@600;700&family=DM+Serif+Display&family=Bebas+Neue&family=Abril+Fatface&family=Cinzel:wght@700&family=Josefin+Sans:wght@600;700&family=Outfit:wght@600;700&family=Raleway:wght@700;800&family=Caveat:wght@700&family=Sacramento&family=Dancing+Script:wght@700&family=Pacifico&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080808;
+      --surface: #111;
+      --surface2: #161616;
+      --border: #1e1e1e;
+      --border2: #2a2a2a;
+      --accent: #e8ff5a;
+      --text: #f0f0f0;
+      --muted: #555;
+      --muted2: #888;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; }
+
+    /* Layout */
+    .layout { display: grid; grid-template-columns: 260px 1fr 320px; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .logo { font-size: 10px; font-weight: 800; letter-spacing: 0.3em; text-transform: uppercase; color: var(--accent); margin-bottom: 40px; }
+
+    .nav-label { font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; margin-top: 24px; }
+
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 4px;
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted2);
+      cursor: pointer;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      transition: all 0.15s;
+    }
+
+    .nav-btn:hover { background: var(--surface2); color: var(--text); }
+    .nav-btn.active { background: rgba(232,255,90,0.1); color: var(--accent); }
+
+    .nav-icon { font-size: 16px; }
+
+    .sidebar-bottom { margin-top: auto; }
+
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+
+    .user-avatar {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      color: #000;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .user-name { font-size: 13px; font-weight: 700; }
+    .user-role { font-size: 10px; color: var(--muted2); letter-spacing: 0.1em; }
+
+    .logout-btn {
+      width: 100%;
+      padding: 10px;
+      background: none;
+      border: 1px solid var(--border2);
+      color: var(--muted2);
+      font-family: 'Syne', sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .logout-btn:hover { border-color: #ff6b6b; color: #ff6b6b; }
+
+    /* Main content */
+    .main { padding: 40px 40px; overflow-y: auto; }
+
+    .page-header { margin-bottom: 36px; }
+    .page-title { font-size: 28px; font-weight: 800; }
+    .page-sub { color: var(--muted2); font-size: 13px; margin-top: 4px; }
+
+    /* Sections */
+    .section { margin-bottom: 32px; }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 24px;
+    }
+
+    .field { margin-bottom: 20px; }
+    .field:last-child { margin-bottom: 0; }
+
+    label { display: block; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted2); margin-bottom: 8px; }
+
+    input[type="text"], textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border2);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      padding: 12px 14px;
+      outline: none;
+      transition: border-color 0.2s;
+      resize: vertical;
+    }
+
+    input[type="text"]:focus, textarea:focus { border-color: var(--accent); }
+
+    /* Font selector */
+    .font-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .font-opt {
+      border: 1px solid var(--border2);
+      padding: 14px 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+      font-size: 18px;
+      background: var(--bg);
+    }
+
+    .font-opt:hover { border-color: var(--muted2); }
+    .font-opt.selected { border-color: var(--accent); background: rgba(232,255,90,0.05); }
+
+    .font-label { font-size: 9px; font-family: 'Syne', sans-serif; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.1em; }
+
+    /* Video upload */
+    .upload-zone {
+      border: 1px dashed var(--border2);
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: rgba(232,255,90,0.03); }
+
+    .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+    .upload-icon { font-size: 32px; margin-bottom: 12px; }
+    .upload-text { font-size: 13px; color: var(--muted2); }
+    .upload-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+    .current-video {
+      background: var(--bg);
+      border: 1px solid var(--border2);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .video-icon { font-size: 20px; }
+    .video-name { font-size: 12px; font-family: 'Syne Mono', monospace; color: var(--muted2); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .remove-btn { background: none; border: none; color: #ff6b6b; cursor: pointer; font-size: 18px; padding: 0 4px; }
+
+    /* Links editor */
+    .links-list { margin-bottom: 12px; }
+
+    .link-item {
+      display: grid;
+      grid-template-columns: 1fr 1fr 40px;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .link-remove {
+      background: none;
+      border: 1px solid var(--border2);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .link-remove:hover { border-color: #ff6b6b; color: #ff6b6b; }
+
+    .add-link-btn {
+      background: none;
+      border: 1px dashed var(--border2);
+      color: var(--muted2);
+      width: 100%;
+      padding: 10px;
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .add-link-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Save button */
+    .save-btn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 14px 32px;
+      font-family: 'Syne', sans-serif;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .save-btn:hover { opacity: 0.9; }
+    .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .save-row { display: flex; align-items: center; gap: 16px; }
+    .save-status { font-size: 12px; color: var(--accent); opacity: 0; transition: opacity 0.3s; }
+    .save-status.show { opacity: 1; }
+
+    /* Progress bar for upload */
+    .progress-wrap { margin-top: 12px; display: none; }
+    .progress-bar-bg { background: var(--border2); height: 3px; }
+    .progress-bar-fill { background: var(--accent); height: 3px; width: 0%; transition: width 0.3s; }
+    .progress-text { font-size: 11px; color: var(--muted2); margin-top: 6px; font-family: 'Syne Mono', monospace; }
+
+    /* Preview panel */
+    .preview-panel {
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      padding: 24px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .preview-label { font-size: 10px; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+
+    .preview-phone {
+      background: #000;
+      border: 2px solid var(--border2);
+      border-radius: 12px;
+      overflow: hidden;
+      aspect-ratio: 9/18;
+      position: relative;
+      max-width: 240px;
+      margin: 0 auto;
+    }
+
+    .preview-video-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.5;
+    }
+
+    .preview-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 100%);
+    }
+
+    .preview-content {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 20px 16px;
+      text-align: center;
+    }
+
+    .preview-name {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+      line-height: 1.1;
+    }
+
+    .preview-bio { font-size: 11px; color: rgba(255,255,255,0.7); margin-bottom: 14px; line-height: 1.4; }
+
+    .preview-link {
+      display: block;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #fff;
+      padding: 8px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      text-decoration: none;
+      transition: background 0.2s;
+      border-radius: 4px;
+    }
+
+    .view-live {
+      display: block;
+      text-align: center;
+      margin-top: 16px;
+      font-size: 11px;
+      color: var(--accent);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+    }
+
+    .view-live:hover { text-decoration: underline; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--accent);
+      color: #000;
+      padding: 12px 20px;
+      font-size: 13px;
+      font-weight: 700;
+      z-index: 100;
+      transform: translateY(20px);
+      opacity: 0;
+      transition: all 0.3s;
+    }
+
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; }
+      .preview-panel { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">● Biolink</div>
+
+      <div class="nav-label">Pages</div>
+      <button class="nav-btn active"><span class="nav-icon">✦</span> Profile</button>
+      <button class="nav-btn" onclick="window.open('/', '_blank')"><span class="nav-icon">↗</span> View Live</button>
+
+      <div class="sidebar-bottom">
+        <div class="user-chip">
+          <div class="user-avatar" id="avatarInitial">?</div>
+          <div>
+            <div class="user-name" id="sidebarUsername">...</div>
+            <div class="user-role">Admin</div>
+          </div>
+        </div>
+        <button class="logout-btn" onclick="logout()">Sign Out</button>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div class="main">
+      <div class="page-header">
+        <div class="page-title">Edit Profile</div>
+        <div class="page-sub">Customize how your bio link page looks to visitors</div>
+      </div>
+
+      <!-- Identity -->
+      <div class="section">
+        <div class="section-title">Identity</div>
+        <div class="card">
+          <div class="field">
+            <label>Display Name</label>
+            <input type="text" id="displayName" maxlength="60" placeholder="Your Name" oninput="updatePreview()" />
+          </div>
+          <div class="field">
+            <label>Bio</label>
+            <textarea id="bio" rows="3" maxlength="300" placeholder="A short bio about you ✨" oninput="updatePreview()"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Font -->
+      <div class="section">
+        <div class="section-title">Name Font</div>
+        <div class="card">
+          <div class="font-grid" id="fontGrid"></div>
+        </div>
+      </div>
+
+      <!-- Background Video -->
+      <div class="section">
+        <div class="section-title">Background Video</div>
+        <div class="card">
+          <div class="upload-zone" id="uploadZone">
+            <input type="file" id="videoInput" accept="video/mp4,video/webm,video/ogg,video/quicktime" onchange="uploadVideo(this)" />
+            <div class="upload-icon">▶</div>
+            <div class="upload-text">Drop a video or click to browse</div>
+            <div class="upload-sub">MP4, WebM, MOV · Max 100MB</div>
+          </div>
+          <div class="progress-wrap" id="progressWrap">
+            <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
+            <div class="progress-text" id="progressText">Uploading...</div>
+          </div>
+          <div class="current-video" id="currentVideo" style="display:none">
+            <div class="video-icon">🎬</div>
+            <div class="video-name" id="videoFileName">video.mp4</div>
+            <button class="remove-btn" onclick="removeVideo()" title="Remove video">×</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Links -->
+      <div class="section">
+        <div class="section-title">Links</div>
+        <div class="card">
+          <div class="links-list" id="linksList"></div>
+          <button class="add-link-btn" onclick="addLink()">+ Add Link</button>
+        </div>
+      </div>
+
+      <!-- Save -->
+      <div class="save-row">
+        <button class="save-btn" id="saveBtn" onclick="saveProfile()">Save Changes</button>
+        <span class="save-status" id="saveStatus">✓ Saved</span>
+      </div>
+    </div>
+
+    <!-- Preview Panel -->
+    <div class="preview-panel">
+      <div class="preview-label">Live Preview</div>
+      <div class="preview-phone">
+        <video class="preview-video-bg" id="previewVideo" autoplay muted loop playsinline style="display:none"></video>
+        <div class="preview-overlay"></div>
+        <div class="preview-content">
+          <div class="preview-name" id="previewName">Your Name</div>
+          <div class="preview-bio" id="previewBio">Welcome to my page ✨</div>
+          <div id="previewLinks"></div>
+        </div>
+      </div>
+      <a href="/" target="_blank" class="view-live">↗ View Live Page</a>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const FONTS = [
+      { name: 'Playfair Display', label: 'Playfair' },
+      { name: 'Cormorant Garamond', label: 'Cormorant' },
+      { name: 'DM Serif Display', label: 'DM Serif' },
+      { name: 'Bebas Neue', label: 'Bebas' },
+      { name: 'Abril Fatface', label: 'Abril' },
+      { name: 'Cinzel', label: 'Cinzel' },
+      { name: 'Josefin Sans', label: 'Josefin' },
+      { name: 'Outfit', label: 'Outfit' },
+      { name: 'Raleway', label: 'Raleway' },
+      { name: 'Caveat', label: 'Caveat' },
+      { name: 'Sacramento', label: 'Sacramento' },
+      { name: 'Dancing Script', label: 'Dancing' },
+      { name: 'Pacifico', label: 'Pacifico' },
+      { name: 'Syne', label: 'Syne' },
+    ];
+
+    let selectedFont = 'Playfair Display';
+    let currentVideoPath = null;
+    let links = [];
+
+    // Init
+    window.addEventListener('DOMContentLoaded', async () => {
+      buildFontGrid();
+      await loadProfile();
+    });
+
+    function buildFontGrid() {
+      const grid = document.getElementById('fontGrid');
+      FONTS.forEach(f => {
+        const el = document.createElement('div');
+        el.className = 'font-opt' + (f.name === selectedFont ? ' selected' : '');
+        el.innerHTML = `<div style="font-family:'${f.name}',serif">${document.getElementById ? 'Aa' : 'Aa'}</div><div class="font-label">${f.label}</div>`;
+        el.onclick = () => selectFont(f.name);
+        grid.appendChild(el);
+      });
+    }
+
+    function selectFont(name) {
+      selectedFont = name;
+      document.querySelectorAll('.font-opt').forEach((el, i) => {
+        el.classList.toggle('selected', FONTS[i].name === name);
+      });
+      updatePreview();
+    }
+
+    async function loadProfile() {
+      try {
+        const res = await fetch('/admin/profile');
+        if (res.status === 401) { window.location.href = '/login'; return; }
+        const data = await res.json();
+
+        document.getElementById('sidebarUsername').textContent = data.username;
+        document.getElementById('avatarInitial').textContent = (data.username || '?')[0].toUpperCase();
+        document.getElementById('displayName').value = data.profile.display_name || '';
+        document.getElementById('bio').value = data.profile.bio || '';
+        
+        selectedFont = data.profile.font_family || 'Playfair Display';
+        document.querySelectorAll('.font-opt').forEach((el, i) => {
+          el.classList.toggle('selected', FONTS[i]?.name === selectedFont);
+        });
+
+        links = data.profile.links || [];
+        renderLinks();
+
+        if (data.profile.video_path) {
+          currentVideoPath = data.profile.video_path;
+          showCurrentVideo(data.profile.video_path);
+        }
+
+        updatePreview();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function updatePreview() {
+      const name = document.getElementById('displayName').value || 'Your Name';
+      const bio = document.getElementById('bio').value || 'Welcome to my page ✨';
+
+      document.getElementById('previewName').textContent = name;
+      document.getElementById('previewName').style.fontFamily = `'${selectedFont}', serif`;
+      document.getElementById('previewBio').textContent = bio;
+
+      const pl = document.getElementById('previewLinks');
+      pl.innerHTML = links.slice(0, 4).map(l =>
+        `<div class="preview-link">${l.label || l.url}</div>`
+      ).join('');
+    }
+
+    // Links
+    function renderLinks() {
+      const list = document.getElementById('linksList');
+      list.innerHTML = '';
+      links.forEach((link, i) => {
+        const row = document.createElement('div');
+        row.className = 'link-item';
+        row.innerHTML = `
+          <input type="text" placeholder="Label (e.g. Instagram)" value="${esc(link.label)}" oninput="links[${i}].label=this.value;updatePreview()" />
+          <input type="text" placeholder="https://..." value="${esc(link.url)}" oninput="links[${i}].url=this.value" />
+          <button class="link-remove" onclick="removeLink(${i})">×</button>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    function addLink() {
+      links.push({ label: '', url: '' });
+      renderLinks();
+    }
+
+    function removeLink(i) {
+      links.splice(i, 1);
+      renderLinks();
+      updatePreview();
+    }
+
+    function esc(str) {
+      return (str || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // Video upload
+    async function uploadVideo(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      const zone = document.getElementById('uploadZone');
+      const progressWrap = document.getElementById('progressWrap');
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressText');
+
+      zone.style.opacity = '0.5';
+      zone.style.pointerEvents = 'none';
+      progressWrap.style.display = 'block';
+
+      const formData = new FormData();
+      formData.append('video', file);
+
+      return new Promise((resolve) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/admin/upload-video');
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const pct = Math.round((e.loaded / e.total) * 100);
+            progressFill.style.width = pct + '%';
+            progressText.textContent = `Uploading... ${pct}%`;
+          }
+        };
+
+        xhr.onload = () => {
+          zone.style.opacity = '1';
+          zone.style.pointerEvents = 'auto';
+          progressWrap.style.display = 'none';
+          input.value = '';
+
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (xhr.status === 200 && data.success) {
+              currentVideoPath = data.video_path;
+              showCurrentVideo(data.video_path);
+              showToast('Video uploaded!');
+            } else {
+              showToast(data.error || 'Upload failed', true);
+            }
+          } catch { showToast('Upload failed', true); }
+          resolve();
+        };
+
+        xhr.onerror = () => {
+          zone.style.opacity = '1';
+          zone.style.pointerEvents = 'auto';
+          progressWrap.style.display = 'none';
+          showToast('Upload failed', true);
+          resolve();
+        };
+
+        xhr.send(formData);
+      });
+    }
+
+    function showCurrentVideo(path) {
+      const cv = document.getElementById('currentVideo');
+      const fn = document.getElementById('videoFileName');
+      cv.style.display = 'flex';
+      fn.textContent = path.split('/').pop();
+
+      const pv = document.getElementById('previewVideo');
+      pv.src = path;
+      pv.style.display = 'block';
+    }
+
+    async function removeVideo() {
+      await fetch('/admin/video', { method: 'DELETE' });
+      currentVideoPath = null;
+      document.getElementById('currentVideo').style.display = 'none';
+      const pv = document.getElementById('previewVideo');
+      pv.src = '';
+      pv.style.display = 'none';
+      showToast('Video removed');
+    }
+
+    // Save profile
+    async function saveProfile() {
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
+      try {
+        const res = await fetch('/admin/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            display_name: document.getElementById('displayName').value,
+            bio: document.getElementById('bio').value,
+            font_family: selectedFont,
+            links,
+          }),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          showToast('Changes saved!');
+          const st = document.getElementById('saveStatus');
+          st.classList.add('show');
+          setTimeout(() => st.classList.remove('show'), 2500);
+        } else {
+          showToast(data.error || 'Save failed', true);
+        }
+      } catch {
+        showToast('Network error', true);
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Save Changes';
+    }
+
+    async function logout() {
+      await fetch('/auth/logout', { method: 'POST' });
+      window.location.href = '/login';
+    }
+
+    function showToast(msg, error = false) {
+      const t = document.getElementById('toast');
+      t.textContent = error ? '✕ ' + msg : '✓ ' + msg;
+      t.style.background = error ? '#ff6b6b' : 'var(--accent)';
+      t.style.color = error ? '#fff' : '#000';
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+  </script>
+</body>
+</html>
