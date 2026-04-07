@@ -39,43 +39,78 @@ router.get('/profile', requireAuth, (req, res) => {
 
 router.post('/profile', requireAuth, (req, res) => {
   const {
-    display_name, bio, font_family, links, enter_text,
-    bg_color, overlay_opacity, text_color,
-    button_bg, button_border, button_text_color, button_radius,
-    show_avatar, avatar_emoji, name_size, bio_size,
+    display_name, bio, tagline, font_family, bio_font, links, enter_text,
+    bg_color, bg_type, overlay_opacity, text_color, subtext_color,
+    button_bg, button_border, button_text_color, button_radius, button_font_size, button_style,
+    show_avatar, avatar_emoji, avatar_size, avatar_shape, name_size, bio_size, tagline_size, spacing_gap,
+    max_width, align, position, page_style,
+    social_twitter, social_instagram, social_tiktok, social_youtube, social_linkedin, social_github, social_spotify,
+    page_title, meta_desc, splash_style, splash_color,
   } = req.body;
 
   const allowed_fonts = ['Playfair Display','Cormorant Garamond','DM Serif Display','Bebas Neue','Abril Fatface','Cinzel','Josefin Sans','Outfit','Raleway','Caveat','Sacramento','Dancing Script','Pacifico','Inter'];
+  const allowed_bio_fonts = ['Inter','Outfit','Raleway','Josefin Sans','Caveat','Dancing Script'];
   const safe_font = allowed_fonts.includes(font_family) ? font_family : 'Playfair Display';
+  const safe_bio_font = allowed_bio_fonts.includes(bio_font) ? bio_font : 'Inter';
   let linksStr;
   try { linksStr = JSON.stringify(Array.isArray(links) ? links : JSON.parse(links || '[]')); } catch { linksStr = '[]'; }
 
   const db = getDb();
   db.runSave(
     `UPDATE profile SET
-      display_name=?, bio=?, font_family=?, links=?, enter_text=?,
-      bg_color=?, overlay_opacity=?, text_color=?,
-      button_bg=?, button_border=?, button_text_color=?, button_radius=?,
-      show_avatar=?, avatar_emoji=?, name_size=?, bio_size=?,
+      display_name=?, bio=?, tagline=?, font_family=?, bio_font=?, links=?, enter_text=?,
+      bg_color=?, bg_type=?, overlay_opacity=?, text_color=?, subtext_color=?,
+      button_bg=?, button_border=?, button_text_color=?, button_radius=?, button_font_size=?, button_style=?,
+      show_avatar=?, avatar_emoji=?, avatar_size=?, avatar_shape=?,
+      name_size=?, bio_size=?, tagline_size=?, spacing_gap=?,
+      max_width=?, align=?, position=?, page_style=?,
+      social_twitter=?, social_instagram=?, social_tiktok=?, social_youtube=?,
+      social_linkedin=?, social_github=?, social_spotify=?,
+      page_title=?, meta_desc=?, splash_style=?, splash_color=?,
       updated_at=CURRENT_TIMESTAMP
     WHERE user_id=?`,
     [
       (display_name || '').slice(0, 60),
       (bio || '').slice(0, 300),
+      (tagline || '').slice(0, 80),
       safe_font,
+      safe_bio_font,
       linksStr,
       (enter_text || 'click to enter').slice(0, 60),
       (bg_color || '#0c0c0c').slice(0, 20),
+      ['solid','gradient'].includes(bg_type) ? bg_type : 'solid',
       Math.min(1, Math.max(0, parseFloat(overlay_opacity) || 0.5)),
       (text_color || '#ffffff').slice(0, 20),
+      (subtext_color || '#aaaaaa').slice(0, 20),
       (button_bg || 'rgba(255,255,255,0.07)').slice(0, 50),
       (button_border || 'rgba(255,255,255,0.1)').slice(0, 50),
       (button_text_color || '#ffffff').slice(0, 20),
       Math.min(50, Math.max(0, parseInt(button_radius) || 10)),
+      Math.min(20, Math.max(10, parseInt(button_font_size) || 14)),
+      ['filled','outline','ghost','pill'].includes(button_style) ? button_style : 'filled',
       show_avatar ? 1 : 0,
       (avatar_emoji || '✦').slice(0, 10),
+      Math.min(120, Math.max(40, parseInt(avatar_size) || 72)),
+      ['circle','rounded','square'].includes(avatar_shape) ? avatar_shape : 'circle',
       Math.min(72, Math.max(16, parseInt(name_size) || 36)),
       Math.min(24, Math.max(10, parseInt(bio_size) || 14)),
+      Math.min(22, Math.max(10, parseInt(tagline_size) || 13)),
+      Math.min(32, Math.max(4, parseInt(spacing_gap) || 10)),
+      Math.min(600, Math.max(260, parseInt(max_width) || 360)),
+      ['center','left','right'].includes(align) ? align : 'center',
+      ['top','center','bottom'].includes(position) ? position : 'bottom',
+      ['minimal','card','glass'].includes(page_style) ? page_style : 'minimal',
+      (social_twitter || '').slice(0, 50),
+      (social_instagram || '').slice(0, 50),
+      (social_tiktok || '').slice(0, 50),
+      (social_youtube || '').slice(0, 80),
+      (social_linkedin || '').slice(0, 80),
+      (social_github || '').slice(0, 50),
+      (social_spotify || '').slice(0, 100),
+      (page_title || '').slice(0, 60),
+      (meta_desc || '').slice(0, 160),
+      ['pulse','blink','static','glow'].includes(splash_style) ? splash_style : 'pulse',
+      (splash_color || 'rgba(255,255,255,0.45)').slice(0, 40),
       req.session.userId,
     ]
   );
