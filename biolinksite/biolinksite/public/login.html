@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign in</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%; background: #f5f4f0;
+      font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .card {
+      background: #fff; width: 100%; max-width: 380px; margin: 20px;
+      padding: 44px 40px; border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 24px rgba(0,0,0,0.06);
+    }
+
+    .brand { font-size: 13px; font-weight: 600; color: #111; margin-bottom: 36px; letter-spacing: -0.01em; }
+
+    h1 { font-size: 26px; font-weight: 600; color: #111; margin-bottom: 6px; letter-spacing: -0.03em; }
+    .sub { font-size: 14px; color: #999; margin-bottom: 32px; }
+
+    .field { margin-bottom: 18px; }
+    label { display: block; font-size: 12px; font-weight: 500; color: #666; margin-bottom: 6px; }
+    input {
+      width: 100%; padding: 11px 14px;
+      border: 1.5px solid #e5e5e5; border-radius: 6px;
+      font-family: 'Inter', sans-serif; font-size: 14px; color: #111;
+      outline: none; transition: border-color 0.15s;
+      background: #fff;
+    }
+    input:focus { border-color: #111; }
+    input::placeholder { color: #bbb; }
+
+    .btn {
+      width: 100%; padding: 12px;
+      background: #111; color: #fff; border: none; border-radius: 6px;
+      font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: background 0.15s; margin-top: 4px;
+    }
+    .btn:hover { background: #222; }
+    .btn:disabled { background: #ccc; cursor: not-allowed; }
+
+    .error {
+      margin-top: 14px; padding: 10px 14px; border-radius: 6px;
+      background: #fff5f5; border: 1px solid #fecaca;
+      font-size: 13px; color: #dc2626; display: none;
+    }
+    .footer { margin-top: 24px; text-align: center; font-size: 13px; color: #999; }
+    .footer a { color: #111; font-weight: 500; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">biolink</div>
+    <h1>Sign in</h1>
+    <p class="sub">Welcome back</p>
+
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="username" autocomplete="username" placeholder="your username" />
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="password" autocomplete="current-password" placeholder="••••••••" />
+    </div>
+
+    <button class="btn" id="loginBtn">Sign in</button>
+    <div class="error" id="error"></div>
+    <div class="footer">No account? <a href="/signup">Sign up</a></div>
+  </div>
+
+  <script>
+    var btn = document.getElementById('loginBtn');
+    var errEl = document.getElementById('error');
+
+    function doLogin() {
+      var username = document.getElementById('username').value.trim();
+      var password = document.getElementById('password').value;
+      errEl.style.display = 'none';
+      if (!username || !password) { errEl.textContent = 'Please fill in all fields.'; errEl.style.display = 'block'; return; }
+      btn.disabled = true; btn.textContent = 'Signing in...';
+      fetch('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username, password: password })
+      })
+      .then(function(res) { return res.json().then(function(d) { return { ok: res.ok, d: d }; }); })
+      .then(function(r) {
+        if (r.ok && r.d.success) {
+          window.location.href = '/dashboard';
+        } else {
+          errEl.textContent = r.d.error || 'Invalid credentials.';
+          errEl.style.display = 'block';
+          btn.disabled = false; btn.textContent = 'Sign in';
+        }
+      })
+      .catch(function() {
+        errEl.textContent = 'Something went wrong. Try again.';
+        errEl.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Sign in';
+      });
+    }
+
+    btn.addEventListener('click', doLogin);
+    document.addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+  </script>
+</body>
+</html>
