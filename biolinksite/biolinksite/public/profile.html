@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,700;1,700&family=Cormorant+Garamond:ital,wght@0,600;1,600&family=DM+Serif+Display:ital@0;1&family=Bebas+Neue&family=Abril+Fatface&family=Cinzel:wght@700&family=Josefin+Sans:wght@600;700&family=Outfit:wght@600;700&family=Raleway:wght@700;800&family=Caveat:wght@700&family=Sacramento&family=Dancing+Script:wght@700&family=Pacifico&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: #0c0c0c; color: #fff; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; overflow: hidden; }
+
+    #splash {
+      position: fixed; inset: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: center;
+      background: #0c0c0c; cursor: pointer;
+      transition: opacity 0.6s ease;
+    }
+    #splash.hidden { opacity: 0; pointer-events: none; }
+    #splashText {
+      font-family: 'Inter', sans-serif;
+      font-size: 13px; font-weight: 500; letter-spacing: 0.18em;
+      text-transform: uppercase; color: rgba(255,255,255,0.45);
+      user-select: none;
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 0.9; } }
+
+    .video-bg { position: fixed; inset: 0; z-index: 0; }
+    .video-bg video { width: 100%; height: 100%; object-fit: cover; }
+    .video-bg::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.85) 100%);
+    }
+    .static-bg { position: fixed; inset: 0; z-index: 0; background: #0c0c0c; }
+
+    .page {
+      position: relative; z-index: 10; min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+      padding: 48px 24px 56px;
+      opacity: 0; transition: opacity 0.8s ease 0.2s;
+    }
+    .page.visible { opacity: 1; }
+    .container { width: 100%; max-width: 360px; }
+
+    .avatar { width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 18px; background: #222; border: 2px solid rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; font-size: 28px; }
+    .name { font-size: 36px; font-weight: 700; color: #fff; text-align: center; margin-bottom: 8px; line-height: 1.1; letter-spacing: -0.02em; }
+    .bio { font-size: 14px; color: rgba(255,255,255,0.5); text-align: center; line-height: 1.6; margin-bottom: 32px; max-width: 280px; margin-left: auto; margin-right: auto; }
+    .links { display: flex; flex-direction: column; gap: 10px; }
+    .link-btn {
+      display: block; padding: 14px 20px;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; color: #fff; font-family: 'Inter', sans-serif;
+      font-size: 14px; font-weight: 500; text-align: center; text-decoration: none;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s; backdrop-filter: blur(12px);
+    }
+    .link-btn:hover { background: rgba(255,255,255,0.13); border-color: rgba(255,255,255,0.2); transform: translateY(-1px); }
+
+    .watermark { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 20; font-size: 11px; color: rgba(255,255,255,0.18); text-decoration: none; }
+    .watermark:hover { color: rgba(255,255,255,0.4); }
+
+    #notfound { display: none; position: fixed; inset: 0; align-items: center; justify-content: center; background: #0c0c0c; color: rgba(255,255,255,0.3); font-size: 14px; }
+  </style>
+</head>
+<body>
+
+  <div id="splash"><div id="splashText">click to enter</div></div>
+  <div id="bg"></div>
+  <div id="notfound">Page not found.</div>
+
+  <main class="page" id="page">
+    <div class="container">
+      <div class="avatar">✦</div>
+      <div class="name" id="name"></div>
+      <div class="bio" id="bio"></div>
+      <div class="links" id="links"></div>
+    </div>
+  </main>
+  <a class="watermark" href="/login">biolink</a>
+
+  <script>
+    // Get username from URL path, e.g. /liam -> "liam"
+    var username = window.location.pathname.replace(/^\//, '').split('/')[0];
+
+    var vid = null;
+
+    fetch('/api/profile/' + encodeURIComponent(username))
+      .then(function(r) {
+        if (r.status === 404) {
+          document.getElementById('splash').style.display = 'none';
+          document.getElementById('notfound').style.display = 'flex';
+          return Promise.reject('not found');
+        }
+        return r.json();
+      })
+      .then(function(data) {
+        // Set page title
+        if (data.display_name) document.title = data.display_name;
+
+        // Update splash text
+        document.getElementById('splashText').textContent = data.enter_text || 'click to enter';
+
+        // Build background (buffering silently before click)
+        var bg = document.getElementById('bg');
+        if (data.video_path) {
+          var wrapper = document.createElement('div');
+          wrapper.className = 'video-bg';
+          vid = document.createElement('video');
+          vid.loop = true;
+          vid.playsInline = true;
+          vid.preload = 'auto';
+          vid.muted = true;
+          vid.src = data.video_path;
+          wrapper.appendChild(vid);
+          bg.appendChild(wrapper);
+          vid.load();
+        } else {
+          var div = document.createElement('div');
+          div.className = 'static-bg';
+          bg.appendChild(div);
+        }
+
+        // Populate content
+        var nameEl = document.getElementById('name');
+        nameEl.textContent = data.display_name || '';
+        if (data.font_family) nameEl.style.fontFamily = "'" + data.font_family + "', serif";
+        document.getElementById('bio').textContent = data.bio || '';
+
+        var linksEl = document.getElementById('links');
+        (data.links || []).forEach(function(l) {
+          if (!l.url) return;
+          var a = document.createElement('a');
+          a.className = 'link-btn';
+          a.href = l.url.startsWith('http') ? l.url : 'https://' + l.url;
+          a.target = '_blank'; a.rel = 'noopener noreferrer';
+          a.textContent = l.label || l.url;
+          linksEl.appendChild(a);
+        });
+      })
+      .catch(function() {});
+
+    // Splash click — user gesture unlocks audio
+    document.getElementById('splash').addEventListener('click', function() {
+      var splash = this;
+      splash.classList.add('hidden');
+      document.getElementById('page').classList.add('visible');
+
+      if (vid) {
+        vid.muted = false;
+        vid.play().catch(function() {
+          vid.muted = true;
+          vid.play().catch(function() {});
+        });
+      }
+
+      setTimeout(function() { splash.remove(); }, 700);
+    });
+  </script>
+</body>
+</html>
